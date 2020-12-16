@@ -1,6 +1,8 @@
 import numpy as np
-#from timeit import default_timer as timer
-#import time
+import multiprocessing
+from timeit import default_timer as timer
+import time
+import sys
 
 np.random.seed()
 
@@ -26,4 +28,43 @@ def calculate_area(samples):
            k = k+1 # samples hit
     area = rectangle_area*k/samples
     return area
+    
+def calculate_var_worker(count, samples):
+    # Disable catching KeyboardInterrupt in the worker processes.
+    # Main process will catch it instead and terminate workers.
+    if sys.platform == "win32":
+        import win32api
+        win32api.SetConsoleCtrlHandler(None, True)
+        
+    area_vec = []
+    for i in range(count):
+        area_vec.append(calculate_area(samples))
+    variance = np.var(area_vec)
+    return variance
+
+def calculate_var(count, samples):
+    cores = int(multiprocessing.cpu_count() - 1)
+    pool = multiprocessing.Pool(cores)
+    results = []
+    for core in range(cores):
+        results.append(pool.apply_async(calculate_var_worker,
+                                         (int(count/cores), samples, )))
+
+    variances = []
+    for result in results:
+        while(1):
+            try:
+                variances.append(result.get(1))
+                break
+            except multiprocessing.context.TimeoutError:
+                pass
+            except KeyboardInterrupt: # Ctrl C has been clicked
+                print("terminating program")
+                pool.terminate()
+                pool.close()
+                pool.join()
+                raise KeyboardInterrupt
+    pool.close()
+    pool.join()
+    return np.mean(variances)
 
