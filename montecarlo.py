@@ -68,3 +68,29 @@ def calculate_var(count, samples):
     pool.join()
     return np.mean(variances)
 
+
+def bisection(beginning_interval, end_interval, count, three_sigma):
+    samples = 1
+    samples_prev = 0
+    while (samples_prev != samples):
+        samples_prev = samples
+        samples = int((beginning_interval + end_interval)/2)
+        tstart = timer()
+        variance = calculate_var(count, samples)
+        tend = timer()
+        print("Samples: {}  Variance: {}  Time: {}".format
+              (samples, variance, tend - tstart))
+        if (variance > 1e-3 - three_sigma):
+            beginning_interval = samples
+        else:
+            end_interval = samples
+    return samples
+
+
+
+
+if __name__ == '__main__':
+    beginning_interval = 0
+    end_interval = 6000
+    count = 14000
+    count_var = 100
