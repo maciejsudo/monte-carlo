@@ -85,8 +85,18 @@ def bisection(beginning_interval, end_interval, count, three_sigma):
         else:
             end_interval = samples
     return samples
-
-
+    
+    
+def var_of_var (count, samples, count_var):
+    var_vec = []
+    tstart = timer()
+    for i in range(count_var):
+        var_vec.append(calculate_var(count, samples))
+    var_var = np.var(var_vec)
+    three_sigma = 3* (np.sqrt(var_var))
+    tend = timer()
+    print("Three sigma: {}  Time: {}".format(three_sigma, tend - tstart))
+    return three_sigma 
 
 
 if __name__ == '__main__':
@@ -94,3 +104,8 @@ if __name__ == '__main__':
     end_interval = 6000
     count = 14000
     count_var = 100
+    three_sigma = 0
+    samples = bisection(beginning_interval, end_interval, count, three_sigma)
+    three_sigma = var_of_var(count, samples, count_var)
+    samples_final = bisection(beginning_interval, end_interval, count, three_sigma)
+    print("Samples: {}".format(samples_final))
